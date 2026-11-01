@@ -140,7 +140,7 @@ Alternatively use `make -C backend dev` from the repository root. The dev target
 
 ## Deploy backend to Render
 
-The deployment files are prepared; no live deployment has been performed by this agent. Push the local source changes to the existing GitHub repository before importing it into either host. Never push backend/.env.
+The configured Render backend is https://prompters-cn6k.onrender.com, with health at https://prompters-cn6k.onrender.com/health. The backend URL was supplied by the project owner; this agent has not published either service. Push the local source changes to the existing GitHub repository before importing it into either host. Never push backend/.env.
 
 **Blueprint:** Render Dashboard → New → Blueprint → connect Morpheus-xz/Prompters → select main and the root render.yaml → supply GEMINI_API_KEY → create the free service. The blueprint selects backend/ as Root Directory and sets SERVE_FRONTEND=false. It installs requirements.txt, starts Uvicorn on $PORT, pins Python 3.11.9 and checks /health. Follow [Render's Blueprint reference](https://render.com/docs/blueprint-spec) for the current dashboard flow.
 
@@ -163,13 +163,13 @@ After Render reports healthy, open its assigned HTTPS URL with /health appended.
 
 Import the same GitHub repository into Vercel. Select Root Directory frontend, Framework Preset Other, and Node.js 22.x or newer. frontend/vercel.json sets the build command to node build.mjs and skips package installation. Leave Output Directory at its automatic default: the build emits Vercel Build Output API v3 artifacts under .vercel/output rather than a framework bundle.
 
-Add one Vercel environment variable: **BACKEND_URL**, set to the actual Render HTTPS origin copied above. Enable it for Production and Preview if both should use that backend, then deploy. A missing or invalid origin fails the build explicitly. Changing BACKEND_URL requires a redeploy because the routes are generated at build time. The public URL is not a secret; GEMINI_API_KEY must remain exclusively on Render.
+The frontend build defaults to **https://prompters-cn6k.onrender.com**. No Vercel backend-URL variable is required for this service. To override the destination, set **BACKEND_URL** to another HTTPS backend origin for the intended Production/Preview environment. An invalid override fails the build explicitly. Changing BACKEND_URL requires a redeploy because the routes are generated at build time. The public URL is not a secret; GEMINI_API_KEY must remain exclusively on Render.
 
 The dependency-free Node script copies index.html and the css/js asset directories without changing them. It generates security headers and native external rewrites for /plans and descendants, /event-types and /health. No serverless proxy function, browser cross-origin request, frontend API key or CORS configuration is introduced. See [Vercel external rewrites](https://vercel.com/docs/routing/rewrites) and the [Build Output API](https://vercel.com/docs/build-output-api).
 
 Use the Vercel URL as the public app. Check /health through that same URL, create a plan, reload and confirm it remains accessible, log an expense, update a task/vendor, then generate ideas. These steps verify live proxying and cookie forwarding, which offline route tests cannot certify. Replace the live-demo marker at the top of this README with the verified Vercel URL.
 
-For a local Vercel artifact check after setting BACKEND_URL in your shell, run `cd frontend` then `node build.mjs`. Production builds read the variable from Vercel settings; frontend/.env.example documents its name. Normal local development still uses `make -C backend dev` and needs no frontend packaging step.
+For a local Vercel artifact check, run `cd frontend` then `node build.mjs`. It uses the configured Render origin by default; Vercel settings can override it through BACKEND_URL. frontend/.env.example documents the current value. Use the origin without /health, because the build appends the API paths. Normal local development still uses `make -C backend dev` and needs no frontend packaging step.
 
 ## Docker (optional alternative)
 

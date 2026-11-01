@@ -135,3 +135,11 @@ def test_render_starts_without_frontend_files(tmp_path: Path) -> None:
         check=False,
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_build_defaults_to_configured_render_backend(tmp_path: Path) -> None:
+    """Deploy to the supplied Render origin when no environment override is set."""
+    result = _node("await build(undefined, process.argv[1]);", str(tmp_path))
+    assert result.returncode == 0, result.stderr
+    config = json.loads((tmp_path / "config.json").read_text())
+    assert config["routes"][1]["dest"] == "https://prompters-cn6k.onrender.com/$1"

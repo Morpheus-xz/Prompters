@@ -4,6 +4,7 @@ import {resolve} from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 
 const frontend = fileURLToPath(new URL('.', import.meta.url));
+const defaultBackendOrigin = 'https://prompters-cn6k.onrender.com';
 const securityHeaders = {
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
@@ -43,7 +44,7 @@ export function deploymentConfig(value) {
 }
 
 /** @param {string} value Public backend origin. @param {string} output Artifact directory. */
-export async function build(value, output = resolve(frontend, '.vercel/output')) {
+export async function build(value = defaultBackendOrigin, output = resolve(frontend, '.vercel/output')) {
   const config = deploymentConfig(value);
   const assets = resolve(output, 'static');
   await mkdir(resolve(assets, 'static'), {recursive: true});
