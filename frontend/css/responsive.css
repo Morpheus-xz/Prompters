@@ -1,0 +1,84 @@
+@media (max-width: 60rem) {
+  .edition {
+    display: none;
+  }
+  .shell {
+    grid-template-columns: 12rem minmax(0, 1fr);
+  }
+  .sidebar {
+    padding: 2rem 1rem;
+  }
+  .metrics {
+    padding: 1rem;
+  }
+}
+@media (max-width: 45rem) {
+  .masthead {
+    padding: 0.8rem 1.2rem;
+    gap: 1rem;
+  }
+  .masthead p {
+    font-size: 0.7rem;
+  }
+  .shell {
+    display: block;
+  }
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 1rem;
+  }
+  .sidebar > .eyebrow,
+  .sidebar-note,
+  .sidebar nav h2 {
+    display: none;
+  }
+  .sidebar > .primary {
+    width: auto;
+    margin: 0 0 0.5rem;
+  }
+  .plan-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0;
+  }
+  .plan-list button {
+    width: auto;
+  }
+  main {
+    padding: 2rem 1rem;
+  }
+  .form-grid,
+  .preview,
+  .idea-grid,
+  .expense-fields {
+    grid-template-columns: 1fr;
+  }
+  .title-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .vendor-list li {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .vendor-list select {
+    width: 100%;
+  }
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+  .metrics > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .checklist time {
+    margin-left: 3.5rem;
+  }
+  .readiness {
+    gap: 0.75rem;
+  }
+}

@@ -1,0 +1,31 @@
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #171f1b;
+    --surface: #202a24;
+    --ink: #e7eee4;
+    --muted: #b2bfb2;
+    --line: #445249;
+    --accent: #b2d6a8;
+    --soft: #2a3a2c;
+    --orange: #f4b39b;
+    --danger: #ffb4b7;
+  }
+  .primary {
+    color: #17251c;
+  }
+  .primary:hover {
+    background: #d5e9cd;
+  }
+  #status:not(:empty) {
+    color: #17251c;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

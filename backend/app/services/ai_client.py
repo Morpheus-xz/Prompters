@@ -65,21 +65,17 @@ def _sdk_client() -> genai.Client:
 )
 def _network_generate(prompt: str, client: genai.Client | None = None) -> str | None:
     """Retry only the SDK network call, never parsing or validation."""
-    return (
-        (client or _sdk_client())
-        .models.generate_content(
-            model=GEMINI_MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                max_output_tokens=AI_MAX_OUTPUT_TOKENS,
-                thinking_config=types.ThinkingConfig(
-                    thinking_budget=AI_THINKING_BUDGET
-                ),
-            ),
-        )
-        .text
+    sdk = client if client is not None else _sdk_client()
+    response = sdk.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            max_output_tokens=AI_MAX_OUTPUT_TOKENS,
+            thinking_config=types.ThinkingConfig(thinking_budget=AI_THINKING_BUDGET),
+        ),
     )
+    return response.text
 
 
 class GeminiClient:

@@ -9,3 +9,6 @@
 **/.ruff_cache
 **/.mypy_cache
 backend/tests
+**/node_modules
+**/.vercel
+frontend/tests

@@ -1,0 +1,48 @@
+footer {
+  border-top: 1px solid var(--line);
+  text-align: center;
+  padding: 1.2rem;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+#status:not(:empty) {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.8rem 1.2rem;
+  background: var(--ink);
+  color: var(--surface);
+  border-radius: 0.5rem;
+  max-width: calc(100% - 2rem);
+  box-shadow: var(--shadow);
+  z-index: 5;
+  font-size: 0.85rem;
+}
+dialog {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  padding: 2rem;
+  max-width: min(30rem, calc(100% - 2rem));
+}
+dialog::backdrop {
+  background: #10251bb0;
+}
+.actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

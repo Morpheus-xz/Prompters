@@ -61,9 +61,17 @@ Create an event brief → receive the full deterministic plan → record expense
 | Dependency injection, cookies, limits, headers and bounded request bodies | backend/app/api/ |
 | Lazy model adapter, prompt policy, sanitization, validation and cache | backend/app/services/ai_client.py, prompts.py, sanitize.py, ideas_service.py, cache.py |
 | Separate hosting and same-origin API proxy | render.yaml; frontend/vercel.json; frontend/build.mjs |
-| One fetch boundary, client state, safe DOM builder and pure render modules | frontend/js/api.js, state.js, dom.js, render/; main.js orchestrates |
+| Browser composition, API actions, state transitions, interaction feedback and pure views | frontend/js/main.js, application.js, actions.js, state.js, ui.js, dom.js, render/ |
 
 The repository pattern isolates storage. FastAPI dependencies inject repository, clock-backed service and AI adapter. Tests replace dependencies with real in-memory storage and a schema-validating FakeAIClient. Registry entries contain every event-specific split, task and vendor: there are no event-type branches in the engine. Adding a vocabulary member to EventType and one registry entry supports another type without changing planning algorithms or UI choices.
+
+### Code quality and maintenance
+
+The browser entry point only composes the application. `application.js` wires UI events; `actions.js` handles API orchestration through an injected request function; `state.js` owns coordinated selection/sidebar transitions; `ui.js` owns loading, focus restoration and field errors. Render modules receive data and callbacks, with the current date passed explicitly into timeline rendering. Shared form readers, monetary controls and small named view components replace nested render expressions and repeated conversion logic.
+
+Browser code uses checked JSDoc against `frontend/types/contracts.d.ts`. TypeScript checks every production JavaScript module without compiling it. ESLint rejects unused bindings, unsafe HTML/evaluation APIs, complexity above 8, functions longer than 35 lines and modules longer than 250 lines. Prettier formats JavaScript, HTML, CSS and configuration. Styles are split by responsibility with the original declaration order retained. The generated npm lockfile is not a handwritten source module.
+
+The Python service shares one typed lookup for expenses, tasks and vendors; pure calculation helpers name their intermediate values and separate aggregation from presentation. Both language stacks are verified by `make -C backend audit`. Frontend tooling is locked and development-only: Vercel still uses the dependency-free packaging script and ships neither node_modules nor test/type/tooling files.
 
 ## Security
 
@@ -85,16 +93,18 @@ Creative results use a bounded LRU TTL cache (30 minutes), keyed by globally uni
 
 ## Testing
 
-Requires Python 3.11 and Node.js 22 or newer. Node tests validate deployment packaging and routing; the backend runtime remains Python-only.
+Requires Python 3.11 and Node.js 22 or newer. Run `npm --prefix frontend ci` once to install the locked development tools. Node 22.13 or newer is required. The backend runtime remains Python-only; frontend production modules remain vanilla JavaScript.
 
 ```sh
 make -C backend install
 make -C backend audit
 ```
 
-`make -C backend audit` runs Ruff lint/format, strict mypy on backend/app/, Vulture and pytest with branch coverage and a hard 95% threshold. Runtime and test dependencies are separate and their direct versions are pinned. Structural tests guard referenced config constants, source sizes, function sizes, docstrings and Python type hints. Run targets from backend/: test, cov, lint, format, typecheck, deadcode. `make clean` removes tooling caches.
+`make -C backend audit` runs Ruff lint/format, strict mypy on backend/app/, Vulture, pytest with branch coverage and a hard 95% threshold, then the frontend ESLint/Prettier/TypeScript checks and Node test suite. Runtime and test dependencies are separate and their direct versions are pinned. Structural tests guard referenced config constants, source sizes, function sizes, docstrings and Python type hints. Run targets from backend/: test, cov, lint, format, typecheck, deadcode. `make clean` removes tooling caches.
 
-Tests use injected date/monotonic clocks and fresh repositories; two TestClients have separate cookie jars. FakeAIClient validates the actual schema, counts calls and accepts configurable payloads/failures. Adapter tests use an explicitly injected HTTP transport; there are no external network requests or monkeypatches. Deployment tests also validate API-only startup, HTTPS backend origins, every proxied API path, strict frontend headers, API no-store policy, and public-asset-only output. Coverage includes awkward cents and ties, every registry, compression, tomorrow, empty/overdue readiness, exact spending thresholds, TTL/LRU, request validation, lifecycle, caps, isolation, first-POST ownership, sanitization, AI filtering/failures/refresh/purge, retry bounds, headers, body-size enforcement and rate-limit restoration in finally.
+Frontend tests use real jsdom DOM controls and injected HTTP/action implementations: no live network calls or global fetch replacement. They cover wire errors, state transitions, rendering, form conversion, duplicate-submission prevention, focus/loading feedback and the actual application controller’s create/update flows. Run them independently with `npm --prefix frontend run audit`.
+
+Backend tests use injected date/monotonic clocks and fresh repositories; two TestClients have separate cookie jars. FakeAIClient validates the actual schema, counts calls and accepts configurable payloads/failures. Adapter tests use an explicitly injected HTTP transport; there are no external network requests or monkeypatches. Deployment tests also validate API-only startup, HTTPS backend origins, every proxied API path, strict frontend headers, API no-store policy, and public-asset-only output. Coverage includes awkward cents and ties, every registry, compression, tomorrow, empty/overdue readiness, exact spending thresholds, TTL/LRU, request validation, lifecycle, caps, isolation, first-POST ownership, sanitization, AI filtering/failures/refresh/purge, retry bounds, headers, body-size enforcement and rate-limit restoration in finally.
 
 ## Accessibility
 
@@ -188,8 +198,12 @@ The two application folders are frontend/ and backend/. Shared repository metada
 frontend/
   index.html build.mjs vercel.json .env.example
   css/style.css
-  js/             main.js api.js dom.js state.js
-    render/       plans.js budget.js timeline.js vendors.js ideas.js
+  js/             main.js application.js actions.js api.js state.js ui.js
+                  config.js dom.js forms.js
+    render/       small plan/form/budget/expense/timeline/vendor/idea views
+  types/          contracts.d.ts (development-only API shapes)
+  tests/          offline API, DOM, state and application-controller tests
+  package.json package-lock.json tsconfig.json eslint.config.mjs
 backend/
   app/
     __init__.py main.py config.py settings.py exceptions.py

@@ -1,7 +1,8 @@
 """Business rules and repository orchestration with an injected date clock."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import UTC, date, datetime, time, timedelta
+from typing import TypeVar
 from uuid import uuid4
 
 from app.config import (
@@ -12,7 +13,7 @@ from app.config import (
     MAX_PLANS_PER_USER,
 )
 from app.exceptions import InvalidInputError, LimitExceededError, NotFoundError
-from app.models.domain import Expense, Plan
+from app.models.domain import Expense, Plan, Task, Vendor
 from app.models.enums import VendorStatus
 from app.models.requests import CreatePlanRequest, ExpenseRequest
 from app.models.responses import PlanDetail, PlanSummary
@@ -25,6 +26,16 @@ from app.services.planner_engine import (
     generate_vendors,
     per_guest_budget,
 )
+
+PlanItem = TypeVar("PlanItem", Expense, Task, Vendor)
+
+
+def _find_item(items: Sequence[PlanItem], item_id: str) -> PlanItem:
+    """Apply the same missing-item rule to expenses, tasks and vendors."""
+    for item in items:
+        if item.id == item_id:
+            return item
+    raise NotFoundError()
 
 
 class PlanService:
@@ -42,12 +53,7 @@ class PlanService:
     ) -> PlanDetail:
         """Validate policy and create a complete plan without contacting AI."""
         today = self.today()
-        if not today < request.event_date <= today + timedelta(days=MAX_LEAD_DAYS):
-            raise InvalidInputError(
-                f"Event date must be within the next {MAX_LEAD_DAYS} days."
-            )
-        if len(await self.repo.list(owner_id)) >= MAX_PLANS_PER_USER:
-            raise LimitExceededError("Plan limit reached. Delete a plan first.")
+        await self._validate_creation(owner_id, request, today)
         tasks, compressed = generate_timeline(
             request.event_type, request.event_date, today
         )
@@ -69,8 +75,8 @@ class PlanService:
     async def list_plans(self, owner_id: str) -> list[PlanSummary]:
         """Return public summaries for this owner."""
         return [
-            PlanSummary.model_validate(p.model_dump())
-            for p in await self.repo.list(owner_id)
+            PlanSummary.model_validate(plan.model_dump())
+            for plan in await self.repo.list(owner_id)
         ]
 
     async def get_plan(self, owner_id: str, plan_id: str) -> Plan:
@@ -99,17 +105,13 @@ class PlanService:
 
     async def remove_expense(self, plan: Plan, expense_id: str) -> PlanDetail:
         """Remove a known expense."""
-        expense = next((e for e in plan.expenses if e.id == expense_id), None)
-        if expense is None:
-            raise NotFoundError()
+        expense = _find_item(plan.expenses, expense_id)
         plan.expenses.remove(expense)
         return await self._save(plan)
 
     async def update_task(self, plan: Plan, task_id: str, done: bool) -> PlanDetail:
         """Update one task without changing its computed date."""
-        task = next((t for t in plan.tasks if t.id == task_id), None)
-        if task is None:
-            raise NotFoundError()
+        task = _find_item(plan.tasks, task_id)
         task.done = done
         return await self._save(plan)
 
@@ -117,9 +119,7 @@ class PlanService:
         self, plan: Plan, vendor_id: str, status: VendorStatus
     ) -> PlanDetail:
         """Advance or reset a vendor's booking stage."""
-        vendor = next((v for v in plan.vendors if v.id == vendor_id), None)
-        if vendor is None:
-            raise NotFoundError()
+        vendor = _find_item(plan.vendors, vendor_id)
         vendor.status = status
         return await self._save(plan)
 
@@ -135,6 +135,17 @@ class PlanService:
                 plan.tasks, plan.vendors, self.today(), plan.event_date
             ),
         )
+
+    async def _validate_creation(
+        self, owner_id: str, request: CreatePlanRequest, today: date
+    ) -> None:
+        """Check creation policy against the date captured for this request."""
+        if not today < request.event_date <= today + timedelta(days=MAX_LEAD_DAYS):
+            raise InvalidInputError(
+                f"Event date must be within the next {MAX_LEAD_DAYS} days."
+            )
+        if len(await self.repo.list(owner_id)) >= MAX_PLANS_PER_USER:
+            raise LimitExceededError("Plan limit reached. Delete a plan first.")
 
     async def _save(self, plan: Plan) -> PlanDetail:
         """Persist before returning public state."""

@@ -1,0 +1,140 @@
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.title-row h1 {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+}
+.readiness {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  padding: 1rem 0 2rem;
+}
+.readiness label {
+  margin: 0;
+}
+progress,
+meter {
+  accent-color: var(--accent);
+  height: 0.6rem;
+  border: 0;
+  border-radius: 1rem;
+}
+progress {
+  width: 9rem;
+}
+.section-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 0.5rem 0;
+}
+.section-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  font-size: 0.85rem;
+  text-decoration: none;
+  font-weight: 600;
+}
+section {
+  padding: 2.5rem 0;
+  border-bottom: 1px solid var(--line);
+  scroll-margin-top: 1rem;
+}
+.section-heading {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1.75rem;
+}
+.section-number {
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  width: 2.3rem;
+  height: 2.3rem;
+  flex-shrink: 0;
+  text-align: center;
+  line-height: 2.3rem;
+  font-size: 0.75rem;
+}
+.section-heading p {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 0.4rem 0 0;
+}
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  background: var(--soft);
+  border: 1px solid var(--line);
+  padding: 1.5rem;
+  border-radius: 0.7rem;
+  gap: 1rem;
+}
+.metrics small,
+.metrics strong {
+  display: block;
+}
+.metrics small {
+  font-size: 0.75rem;
+}
+.metrics strong {
+  font-size: clamp(1rem, 2vw, 1.75rem);
+  overflow-wrap: anywhere;
+}
+.muted {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+th,
+td {
+  padding: 0.8rem 0.5rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+thead th {
+  font-weight: 600;
+  color: var(--muted);
+}
+tbody th {
+  font-weight: 500;
+}
+meter {
+  display: block;
+  width: 5rem;
+  margin-bottom: 0.3rem;
+}
+.badge {
+  font-size: 0.68rem;
+  border: 1px solid var(--line);
+  border-radius: 0.3rem;
+  padding: 0.15rem 0.4rem;
+  display: inline-block;
+  font-weight: 600;
+}
+.on_track {
+  color: var(--accent);
+}
+.warning {
+  color: var(--orange);
+}
+.over {
+  color: var(--danger);
+}

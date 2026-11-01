@@ -1,0 +1,105 @@
+main {
+  min-width: 0;
+  padding: 3rem clamp(1rem, 4vw, 5rem) 4rem;
+}
+h1 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2.25rem, 4.4vw, 4.3rem);
+  line-height: 1.1;
+  font-weight: 400;
+  letter-spacing: -0.035em;
+  margin: 1rem 0 1.5rem;
+  overflow-wrap: anywhere;
+}
+h1 em {
+  color: var(--orange);
+  font-weight: 400;
+}
+h2 {
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+h3 {
+  font-size: 1.5rem;
+  font-weight: 550;
+  margin: 0;
+}
+h4 {
+  font-size: 1rem;
+  margin: 1.7rem 0 0.8rem;
+}
+h5 {
+  font-size: 1.05rem;
+  margin: 0.8rem 0;
+}
+p {
+  margin: 0.5rem 0 1rem;
+}
+.intro {
+  color: var(--muted);
+  max-width: 36rem;
+  margin-bottom: 2.5rem;
+  font-size: 1rem;
+}
+.form-card {
+  background: var(--surface);
+  padding: clamp(1rem, 3vw, 2.5rem);
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  box-shadow: var(--shadow);
+}
+.form-card > h2 {
+  margin: 0 0 1.5rem;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.2rem 1.5rem;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-bottom: 0.4rem;
+}
+.field small {
+  color: var(--muted);
+  font-size: 0.72rem;
+  margin-top: 0.4rem;
+}
+.error {
+  color: var(--danger);
+  font-size: 0.8rem;
+}
+input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+.split-box {
+  background: var(--bg);
+  border-radius: 0.5rem;
+  padding: 1rem 1.3rem;
+  margin: 1.7rem 0;
+}
+.split-box h3 {
+  font-size: 0.9rem;
+}
+.preview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem 2rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.75rem;
+}
+.preview li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+.preview strong {
+  color: var(--accent);
+}

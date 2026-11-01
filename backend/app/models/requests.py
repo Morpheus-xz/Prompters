@@ -27,6 +27,7 @@ def _clean_text(value: str) -> str:
 
 
 Text = Annotated[str, AfterValidator(_clean_text)]
+MoneyAmount = Annotated[float, Field(gt=0, le=MAX_BUDGET, multiple_of=MONEY_STEP)]
 Currency = Literal["INR", "USD", "EUR", "GBP"]
 assert get_args(Currency) == SUPPORTED_CURRENCIES
 
@@ -44,7 +45,7 @@ class CreatePlanRequest(RequestModel):
     event_type: EventType
     event_date: date
     guest_count: int = Field(ge=1, le=MAX_GUESTS, strict=True)
-    total_budget: float = Field(gt=0, le=MAX_BUDGET, multiple_of=MONEY_STEP)
+    total_budget: MoneyAmount
     currency: Currency = "INR"
     city: Annotated[Text, Field(max_length=CITY_MAX)] | None = None
     preferences: Annotated[Text, Field(max_length=PREFERENCES_MAX)] | None = None
@@ -54,7 +55,7 @@ class ExpenseRequest(RequestModel):
     """A categorized spend entry."""
 
     category: Annotated[Text, Field(max_length=TITLE_MAX)]
-    amount: float = Field(gt=0, le=MAX_BUDGET, multiple_of=MONEY_STEP)
+    amount: MoneyAmount
     description: Annotated[Text, Field(max_length=EXPENSE_DESC_MAX)]
 
 

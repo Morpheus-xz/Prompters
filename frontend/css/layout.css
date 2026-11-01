@@ -1,0 +1,98 @@
+.masthead {
+  min-height: 6rem;
+  padding: 1rem 3rem;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+}
+.brand {
+  font-size: 2.1rem;
+  font-weight: 750;
+  letter-spacing: -0.1rem;
+  text-decoration: none;
+  color: var(--ink);
+}
+.brand span:first-child {
+  display: inline-block;
+  color: var(--orange);
+  margin-right: 0.45rem;
+  font-size: 2.5rem;
+}
+.brand-dot {
+  color: var(--orange);
+}
+.masthead p {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.edition {
+  margin-left: auto;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+}
+.shell {
+  display: grid;
+  grid-template-columns: 15.5rem minmax(0, 1fr);
+  max-width: 100rem;
+  margin: auto;
+  min-height: calc(100vh - 10rem);
+}
+.sidebar {
+  border-right: 1px solid var(--line);
+  padding: 2.5rem 1.5rem;
+}
+.eyebrow {
+  font-size: 0.67rem;
+  letter-spacing: 0.14em;
+  font-weight: 750;
+  color: var(--muted);
+}
+.sidebar > .primary {
+  width: 100%;
+  margin: 0.75rem 0 2rem;
+}
+.sidebar h2 {
+  font-size: 0.85rem;
+}
+.sidebar-note {
+  margin-top: 5rem;
+  border-top: 1px solid var(--line);
+  padding-top: 1.5rem;
+  color: var(--muted);
+}
+.sidebar-note > span {
+  font-size: 2rem;
+  color: var(--orange);
+}
+.sidebar-note p {
+  font-family: Georgia, serif;
+  font-size: 1.2rem;
+}
+.sidebar-note small {
+  font-size: 0.7rem;
+}
+.plan-list,
+.checklist,
+.vendor-list,
+.expense-list {
+  list-style: none;
+  padding: 0;
+}
+.plan-list button {
+  width: 100%;
+  text-align: left;
+  border-color: transparent;
+  background: transparent;
+  margin: 0.3rem 0;
+}
+.plan-list button strong,
+.plan-list button small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.plan-list button.selected {
+  background: var(--soft);
+  border-color: var(--line);
+}
