@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Thoughtful event planning with a clear budget, timeline, vendor checklist and personalized ideas.">
+  <title>Festiva · A little less planning. A lot more celebrating.</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script type="module" src="/static/js/main.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to main content</a>
+  <header class="masthead"><a class="brand" href="/" aria-label="Festiva home"><span aria-hidden="true">✳</span> festiva<span class="brand-dot">.</span></a><p>Good things start with a plan.</p><span class="edition">YOUR CELEBRATION, CONSIDERED</span></header>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Your plans">
+      <p class="eyebrow">THE PLANNING ROOM</p>
+      <button id="new-plan" class="primary" type="button">＋ New plan</button>
+      <nav aria-label="Saved plans"><h2>Your celebrations</h2><div id="plans"></div></nav>
+      <div class="sidebar-note"><span aria-hidden="true">✧</span><p>Room for the details.<br>Space for the joy.</p><small>Plans stay in this browser’s anonymous session while the server is running.</small></div>
+    </aside>
+    <main id="main" tabindex="-1">
+      <div id="workspace" aria-busy="false"></div>
+    </main>
+  </div>
+  <footer>Estimates and suggestions are indicative; confirm prices with vendors.</footer>
+  <div id="status" role="status" aria-live="polite" aria-atomic="true"></div>
+  <dialog id="delete-dialog" aria-labelledby="delete-title" aria-describedby="delete-copy">
+    <h2 id="delete-title">Delete this celebration?</h2><p id="delete-copy">This removes its plan, expenses and saved ideas. This cannot be undone.</p>
+    <div class="actions"><button id="cancel-delete" type="button" autofocus>Keep plan</button><button id="confirm-delete" class="danger" type="button">Delete plan</button></div>
+  </dialog>
+</body>
+</html>
