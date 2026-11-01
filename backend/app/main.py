@@ -21,7 +21,7 @@ from app.settings import get_settings
 logging.basicConfig(level=get_settings().log_level)
 
 
-def create_app() -> FastAPI:
+def create_app(serve_frontend: bool = True) -> FastAPI:
     """Wire routes and wrap all responses with the request policy."""
     application = FastAPI(
         title=APP_NAME,
@@ -44,10 +44,11 @@ def create_app() -> FastAPI:
     application.add_exception_handler(Exception, unexpected_error_handler)
     for module in (meta, plans, budget, timeline, vendors, ideas):
         application.include_router(module.router)
-    application.mount(
-        "/static", StaticFiles(directory=frontend_directory()), name="static"
-    )
-    application.add_api_route("/", index, include_in_schema=False)
+    if serve_frontend:
+        application.mount(
+            "/static", StaticFiles(directory=frontend_directory()), name="static"
+        )
+        application.add_api_route("/", index, include_in_schema=False)
     application.add_middleware(GZipMiddleware, minimum_size=GZIP_MIN_SIZE)
     application.add_middleware(RequestPolicyMiddleware)
     return application
@@ -90,4 +91,4 @@ async def index() -> FileResponse:
     return FileResponse(frontend_directory() / "index.html")
 
 
-app = create_app()
+app = create_app(serve_frontend=get_settings().serve_frontend)

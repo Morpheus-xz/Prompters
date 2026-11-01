@@ -7,6 +7,7 @@ from app.api.dependencies import (
     get_repository,
 )
 from app.config import EVENT_SPECS, VERSION
+from app.main import create_app
 
 
 def test_health_and_metadata(client: TestClient) -> None:
@@ -34,3 +35,13 @@ def test_default_dependencies() -> None:
 def test_service_dependency_and_detached_storage() -> None:
     """Verify service dependency and detached storage."""
     assert get_plan_service(get_repository()).repo is get_repository()
+
+
+def test_api_only_mode() -> None:
+    """Render starts without mounting frontend files or changing API routes."""
+    with TestClient(create_app(serve_frontend=False)) as api_client:
+        assert api_client.get("/health").status_code == 200
+        assert api_client.get("/event-types").status_code == 200
+        assert api_client.get("/plans").status_code == 200
+        assert api_client.get("/").status_code == 404
+        assert api_client.get("/static/js/main.js").status_code == 404

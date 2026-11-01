@@ -2,12 +2,15 @@ services:
   - type: web
     name: festiva
     runtime: python
+    rootDir: backend
     plan: free
-    buildCommand: pip install -r backend/requirements.txt
-    startCommand: uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port $PORT
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9
+      - key: SERVE_FRONTEND
+        value: "false"
       - key: GEMINI_API_KEY
         sync: false

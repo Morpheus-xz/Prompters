@@ -37,7 +37,7 @@ A pure, deterministic planning engine computes every number and date; Gemini onl
 ## How it works
 
 ```text
-Browser ES modules → same-origin FastAPI router → owner dependency
+Browser → Vercel static UI + API rewrites → Render FastAPI → owner dependency
                                               ↓
                                       PlanService → PlanRepository
                                               ↓
@@ -60,13 +60,14 @@ Create an event brief → receive the full deterministic plan → record expense
 | Abstract owner-scoped repository and detached in-memory copies | backend/app/repositories/base.py; backend/app/repositories/memory.py |
 | Dependency injection, cookies, limits, headers and bounded request bodies | backend/app/api/ |
 | Lazy model adapter, prompt policy, sanitization, validation and cache | backend/app/services/ai_client.py, prompts.py, sanitize.py, ideas_service.py, cache.py |
+| Separate hosting and same-origin API proxy | render.yaml; frontend/vercel.json; frontend/build.mjs |
 | One fetch boundary, client state, safe DOM builder and pure render modules | frontend/js/api.js, state.js, dom.js, render/; main.js orchestrates |
 
 The repository pattern isolates storage. FastAPI dependencies inject repository, clock-backed service and AI adapter. Tests replace dependencies with real in-memory storage and a schema-validating FakeAIClient. Registry entries contain every event-specific split, task and vendor: there are no event-type branches in the engine. Adding a vocabulary member to EventType and one registry entry supports another type without changing planning algorithms or UI choices.
 
 ## Security
 
-- Same-origin application with no CORS middleware. Strict CSP permits local scripts/styles; only documentation paths relax script/style policy for Swagger/ReDoc initialization and jsDelivr.
+- The browser uses same-origin requests to Vercel; its native external rewrites forward API traffic to Render, keeping the host-only owner cookie first-party. No CORS middleware is needed. Strict CSP permits local scripts/styles; only documentation paths relax script/style policy for Swagger/ReDoc initialization and jsDelivr.
 - UUID owner cookies are validated and set HttpOnly, SameSite=Lax and Secure on HTTPS (including Render's forwarded protocol). A first-visit POST creates and owns its plan in the same request. Foreign and missing IDs both return 404; owner_id never appears in public plan responses.
 - Pydantic rejects extra request fields, blank text, non-finite/fractional-cent money, unsupported currencies and out-of-range values. The service enforces future dates within five years and category membership against the injected date clock.
 - 65,536-byte request cap checks both Content-Length and actual streamed bytes. Plans are capped at 10 per owner; expenses at 200 per plan. Cache capacity is 500.
@@ -74,7 +75,7 @@ The repository pattern isolates storage. FastAPI dependencies inject repository,
 - Sanitization removes control/format characters and bounds text. JSON quoting, untrusted-data instructions, schema validation and category allowlisting are layered defenses, not a guarantee of perfect semantic model behavior.
 - Gemini failures are logged server-side and exposed as a generic 502 by the shared PlannerError handler. Request logging contains only method, path, status and elapsed milliseconds.
 - Security headers cover normal responses and HTTP errors, including body-limit rejections. API responses use no-store; static files use a one-hour public cache; the index uses no-cache.
-- DOM construction uses textContent/text nodes. No HTML-string injection, dynamic code execution, external frontend dependencies, fonts or CDN assets. Secrets are environment-only, .env is ignored, and the Docker process runs as a non-root user.
+- DOM construction uses textContent/text nodes. No HTML-string injection, dynamic code execution, third-party frontend libraries, fonts or CDN assets. Secrets are environment-only, .env is ignored, and the Docker process runs as a non-root user.
 
 ## Efficiency
 
@@ -84,6 +85,8 @@ Creative results use a bounded LRU TTL cache (30 minutes), keyed by globally uni
 
 ## Testing
 
+Requires Python 3.11 and Node.js 22 or newer. Node tests validate deployment packaging and routing; the backend runtime remains Python-only.
+
 ```sh
 make -C backend install
 make -C backend audit
@@ -91,7 +94,7 @@ make -C backend audit
 
 `make -C backend audit` runs Ruff lint/format, strict mypy on backend/app/, Vulture and pytest with branch coverage and a hard 95% threshold. Runtime and test dependencies are separate and their direct versions are pinned. Structural tests guard referenced config constants, source sizes, function sizes, docstrings and Python type hints. Run targets from backend/: test, cov, lint, format, typecheck, deadcode. `make clean` removes tooling caches.
 
-Tests use injected date/monotonic clocks and fresh repositories; two TestClients have separate cookie jars. FakeAIClient validates the actual schema, counts calls and accepts configurable payloads/failures. Adapter tests use an explicitly injected HTTP transport; there are no external network requests or monkeypatches. Coverage includes awkward cents and ties, every registry, compression, tomorrow, empty/overdue readiness, exact spending thresholds, TTL/LRU, request validation, lifecycle, caps, isolation, first-POST ownership, sanitization, AI filtering/failures/refresh/purge, retry bounds, headers, body-size enforcement and rate-limit restoration in finally.
+Tests use injected date/monotonic clocks and fresh repositories; two TestClients have separate cookie jars. FakeAIClient validates the actual schema, counts calls and accepts configurable payloads/failures. Adapter tests use an explicitly injected HTTP transport; there are no external network requests or monkeypatches. Deployment tests also validate API-only startup, HTTPS backend origins, every proxied API path, strict frontend headers, API no-store policy, and public-asset-only output. Coverage includes awkward cents and ties, every registry, compression, tomorrow, empty/overdue readiness, exact spending thresholds, TTL/LRU, request validation, lifecycle, caps, isolation, first-POST ownership, sanitization, AI filtering/failures/refresh/purge, retry bounds, headers, body-size enforcement and rate-limit restoration in finally.
 
 ## Accessibility
 
@@ -133,17 +136,40 @@ Your local key belongs in backend/.env; an existing .env is preserved. Replace t
 uvicorn app.main:app --reload --env-file .env
 ```
 
-Alternatively use `make -C backend dev` from the repository root. The dev target loads backend/.env when present; you can also export GEMINI_API_KEY in your shell. Open http://127.0.0.1:8000; API documentation is at /docs. `make -C backend dev` works without a key for every deterministic planning feature. Configuration also accepts ENV (production by default) and LOG_LEVEL (INFO by default). Python-dotenv is supplied by uvicorn[standard] for the optional CLI env-file loading, not by application startup.
+Alternatively use `make -C backend dev` from the repository root. The dev target loads backend/.env when present; you can also export GEMINI_API_KEY in your shell. Open http://127.0.0.1:8000; API documentation is at /docs. `make -C backend dev` works without a key for every deterministic planning feature. Configuration also accepts ENV (production by default), LOG_LEVEL (INFO by default) and SERVE_FRONTEND (true by default for local use). Render sets SERVE_FRONTEND=false so startup requires no sibling frontend files. Python-dotenv is supplied by uvicorn[standard] for the optional CLI env-file loading, not by application startup.
 
-## Deploy to Render
+## Deploy backend to Render
 
-Deployment has not been performed. The supplied blueprint targets a free Python web service with no database or paid infrastructure. Create a public GitHub repository from this directory and push main yourself.
+The deployment files are prepared; no live deployment has been performed by this agent. Push the local source changes to the existing GitHub repository before importing it into either host. Never push backend/.env.
 
-**Blueprint:** Render Dashboard → New → Blueprint → connect that repository → select main and render.yaml → supply GEMINI_API_KEY when prompted → create the service. The blueprint specifies Python 3.11.9, installs runtime requirements, binds $PORT, and checks /health. Follow [Render's Blueprint reference](https://render.com/docs/blueprint-spec) for the current dashboard flow.
+**Blueprint:** Render Dashboard → New → Blueprint → connect Morpheus-xz/Prompters → select main and the root render.yaml → supply GEMINI_API_KEY → create the free service. The blueprint selects backend/ as Root Directory and sets SERVE_FRONTEND=false. It installs requirements.txt, starts Uvicorn on $PORT, pins Python 3.11.9 and checks /health. Follow [Render's Blueprint reference](https://render.com/docs/blueprint-spec) for the current dashboard flow.
 
-**Manual alternative:** Leave Root Directory blank so both folders are included. New → Web Service → connect the repository → runtime Python, branch main, free instance → build `pip install -r backend/requirements.txt` → start `uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port $PORT` → health check /health → environment PYTHON_VERSION=3.11.9 and GEMINI_API_KEY → deploy. This follows [Render's FastAPI guide](https://render.com/docs/deploy-fastapi). Use the [environment settings](https://render.com/docs/configure-environment-variables) to set the secret; never commit it.
+**Manual alternative:** New → Web Service → connect the same repository → branch main → Root Directory backend → runtime Python → free instance. Use:
 
-Obtain a Gemini Developer API key through [Google AI Studio](https://aistudio.google.com/apikey). Availability and quotas depend on the account/region/model; consult [Google's key guide](https://ai.google.dev/gemini-api/docs/api-key). Use an eligible free-tier key without enabling paid billing. Once Render reports healthy, visit its assigned HTTPS URL, create a plan, request ideas, and replace the live-demo marker at the top of this README with that URL. Commit the README change and push it yourself. Render restarts discard in-memory data.
+| Setting | Value |
+|---|---|
+| Build Command | pip install -r requirements.txt |
+| Start Command | uvicorn app.main:app --host 0.0.0.0 --port $PORT |
+| Health Check Path | /health |
+| PYTHON_VERSION | 3.11.9 |
+| SERVE_FRONTEND | false |
+| GEMINI_API_KEY | Your real key, entered only in Render environment settings |
+
+This follows [Render's FastAPI guide](https://render.com/docs/deploy-fastapi) and [monorepo support](https://render.com/docs/monorepo-support). Obtain a Gemini Developer API key through [Google AI Studio](https://aistudio.google.com/apikey); eligible free-tier access depends on account, region and available quota. No paid billing is required by the application. Do not share the key with Vercel or the frontend.
+
+After Render reports healthy, open its assigned HTTPS URL with /health appended. Copy the origin without a path or query. The backend's root / intentionally returns 404 in API-only mode; /docs remains available. A free-service sleep or restart clears in-memory plans.
+
+## Deploy frontend to Vercel
+
+Import the same GitHub repository into Vercel. Select Root Directory frontend, Framework Preset Other, and Node.js 22.x or newer. frontend/vercel.json sets the build command to node build.mjs and skips package installation. Leave Output Directory at its automatic default: the build emits Vercel Build Output API v3 artifacts under .vercel/output rather than a framework bundle.
+
+Add one Vercel environment variable: **BACKEND_URL**, set to the actual Render HTTPS origin copied above. Enable it for Production and Preview if both should use that backend, then deploy. A missing or invalid origin fails the build explicitly. Changing BACKEND_URL requires a redeploy because the routes are generated at build time. The public URL is not a secret; GEMINI_API_KEY must remain exclusively on Render.
+
+The dependency-free Node script copies index.html and the css/js asset directories without changing them. It generates security headers and native external rewrites for /plans and descendants, /event-types and /health. No serverless proxy function, browser cross-origin request, frontend API key or CORS configuration is introduced. See [Vercel external rewrites](https://vercel.com/docs/routing/rewrites) and the [Build Output API](https://vercel.com/docs/build-output-api).
+
+Use the Vercel URL as the public app. Check /health through that same URL, create a plan, reload and confirm it remains accessible, log an expense, update a task/vendor, then generate ideas. These steps verify live proxying and cookie forwarding, which offline route tests cannot certify. Replace the live-demo marker at the top of this README with the verified Vercel URL.
+
+For a local Vercel artifact check after setting BACKEND_URL in your shell, run `cd frontend` then `node build.mjs`. Production builds read the variable from Vercel settings; frontend/.env.example documents its name. Normal local development still uses `make -C backend dev` and needs no frontend packaging step.
 
 ## Docker (optional alternative)
 
@@ -156,11 +182,11 @@ The image uses python:3.11-slim, installs dependencies before source, runs as us
 
 ## Project layout
 
-The two application folders are frontend/ and backend/. Shared repository metadata and the Render blueprint stay at the root. Backend modules and tests retain their internal structure; the backend serves frontend/ at the existing same-origin URLs.
+The two application folders are frontend/ and backend/. Shared repository metadata and the Render blueprint stay at the root. Render runs backend/ independently; Vercel packages frontend/ and proxies API paths to Render. Local development can still serve the UI from FastAPI.
 
 ```text
 frontend/
-  index.html
+  index.html build.mjs vercel.json .env.example
   css/style.css
   js/             main.js api.js dom.js state.js
     render/       plans.js budget.js timeline.js vendors.js ideas.js
